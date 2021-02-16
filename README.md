@@ -6,6 +6,8 @@ RX2 ccminer is an adaptation of the previous tpruvot ccminer.
 
 The recommended CUDA Toolkit version is 10.1
 
+Minimum Recommended Specs: 6gb+ RAM
+
 
 About source code dependencies
 ------------------------------
