@@ -188,6 +188,9 @@ extern "C" int scanhash_randomx(int thr_id, struct work* work, const uint8_t* se
 		case 800:
 			throughput = 0;
 			break;
+		case 860:
+			throughput = (props.multiProcessorCount) * 64;
+			break;
 		default:
 			throughput = 0;
 	}
