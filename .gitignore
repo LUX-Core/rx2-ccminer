@@ -3,3 +3,9 @@
 *.ii
 *.res
 *.deps
+x64/Release/*
+Debug/*
+x64/Release/aes_hash.asm
+.vs/*
+ccminer.VC.db
+ccminer.vcxproj.user

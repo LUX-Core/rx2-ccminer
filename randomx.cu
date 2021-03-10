@@ -49,7 +49,7 @@ static uint32_t batch_size[MAX_GPUS];
 static size_t dataset_size;
 static randomx_cache *randomx_cpu_cache;
 static randomx_dataset *randomx_cpu_dataset;
-
+static int cpus_number = num_cpus;
 static struct Dataset_threads {
 	pthread_t thr;
 	int id;
@@ -70,12 +70,16 @@ extern "C" void randomx_init_barrier(const int num_threads){
 static void* dataset_init_cpu_thr(void *arg){
 
 	int i = *(int*)arg;
-	uint32_t n = num_cpus;
+	uint32_t n = cpus_number;
 	randomx_init_dataset(randomx_cpu_dataset, randomx_cpu_cache, (i * randomx_dataset_item_count()) / n, ((i + 1) * randomx_dataset_item_count()) / n - (i * randomx_dataset_item_count()) / n);
 	return NULL;
 }
 static void init_dataset_gpu(const int thr_id, const char* mySeed){
-
+#if defined(_MSC_VER)
+	cpus_number = min(32, num_cpus);
+#else
+	cpus_number = std::min(32, num_cpus);
+#endif
 	if(thr_id==0){
 		struct timeval tv_start,tv_end,tv_diff;
 
@@ -89,17 +93,17 @@ static void init_dataset_gpu(const int thr_id, const char* mySeed){
 			gpulog(LOG_WARNING,thr_id,"Couldn't allocate dataset using large pages");
 		}
 
-		applog(LOG_NOTICE,"Initializing dataset using %u cpu cores",num_cpus);
+		applog(LOG_NOTICE,"Initializing dataset using %u cpu cores",cpus_number);
 
 		if(dataset_threads==NULL){
-			dataset_threads = (Dataset_threads*)malloc(num_cpus*sizeof(Dataset_threads));
+			dataset_threads = (Dataset_threads*)malloc(cpus_number*sizeof(Dataset_threads));
 		}
 
-		for (int i = 0; i < num_cpus; ++i){
+		for (int i = 0; i < cpus_number; ++i){
 			dataset_threads[i].id = i;
 			pthread_create(&dataset_threads[i].thr,NULL,dataset_init_cpu_thr,(void*)&dataset_threads[i].id);
 		}
-		for (int i = 0; i < num_cpus; ++i){
+		for (int i = 0; i < cpus_number; ++i){
 			pthread_join(dataset_threads[i].thr,NULL);
 		}
 
@@ -326,8 +330,10 @@ extern "C" int scanhash_randomx(int thr_id, struct work* work, const uint8_t* se
 			uint32_t vhash[8];
 			be32enc(&endiandata[19], h_resNonces[1]);
 			
+
 		        rx_slow_hash(0, 0, (const char*)seedhashA.GetHex().c_str(), (const char*)endiandata, 144, (char*)vhash, 0, 0);
 			if (((uint64_t*)vhash)[3] <= Htarg /*&& fulltest(vhash, ptarget)*/){
+
 				work->valid_nonces = 1;
 				work->nonces[0] = h_resNonces[1];
 				work_set_target_ratio(work, vhash);
