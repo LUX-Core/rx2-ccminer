@@ -78,7 +78,7 @@ static void init_dataset_gpu(const int thr_id, const char* mySeed){
 #if defined(_MSC_VER)
 	cpus_number = min(32, num_cpus);
 #else
-	cpus_number = std::min(32, num_cpus);
+	cpus_number = min(32, num_cpus);
 #endif
 	if(thr_id==0){
 		struct timeval tv_start,tv_end,tv_diff;
